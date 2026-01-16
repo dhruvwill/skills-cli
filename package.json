@@ -1,8 +1,21 @@
 {
   "name": "skills",
   "version": "1.0.0",
+  "description": "A CLI tool for syncing AI skills across all your agent tools",
   "module": "src/cli.ts",
   "type": "module",
+  "keywords": [
+    "bun",
+    "skills",
+    "ai",
+    "agents",
+    "ai agents",
+    "skills",
+    "ai skills",
+    "skills sync"
+  ],
+  "author": "Dhruvil Shah",
+  "license": "MIT",
   "bin": {
     "skills": "src/cli.ts"
   },

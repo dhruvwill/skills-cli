@@ -43,10 +43,16 @@ skills sync  # Done! Skills synced to all targets
 
 ### Prerequisites
 
-- [Bun](https://bun.sh) runtime
+- [Bun](https://bun.sh) runtime (required - uses Bun shell)
 - Git (for remote sources)
 
 ### Install via Bun
+
+```bash
+bun install -g @dhruvwill/skills-cli
+```
+
+### Install from Source
 
 ```bash
 # Clone the repository
@@ -59,8 +65,6 @@ bun install
 # Link globally
 bun link
 ```
-
-After linking, the `skills` command is available globally.
 
 ### Verify Installation
 
@@ -384,6 +388,11 @@ cd skills
 bun install
 bun test
 ```
+
+## Links
+
+- **npm**: [npmjs.com/package/@dhruvwill/skills-cli](https://www.npmjs.com/package/@dhruvwill/skills-cli)
+- **GitHub**: [github.com/dhruvwill/skills](https://github.com/dhruvwill/skills)
 
 ---
 

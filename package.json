@@ -1,5 +1,5 @@
 {
-  "name": "skills",
+  "name": "ai-agent-skills-cli",
   "version": "1.0.0",
   "description": "A CLI tool for syncing AI skills across all your agent tools",
   "module": "src/cli.ts",
@@ -21,6 +21,7 @@
   },
   "scripts": {
     "dev": "bun run src/cli.ts",
+    "build": "bun build src/cli.ts --target bun --outfile dist/skills.js",
     "test": "bun test"
   },
   "devDependencies": {

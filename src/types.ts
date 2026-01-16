@@ -8,8 +8,8 @@ export interface Source {
   url?: string;
   /** Absolute path for local sources */
   path?: string;
-  /** Store subdirectory (e.g., "anthropic/skills" or "local/my-folder") */
-  namespace: string;
+  /** Skill name used in store and targets (e.g., "react-best-practices") */
+  name: string;
 }
 
 /**

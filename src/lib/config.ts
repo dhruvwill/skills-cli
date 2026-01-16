@@ -1,4 +1,5 @@
-import { mkdir } from "fs/promises";
+import { mkdir, rename, rm } from "fs/promises";
+import { join } from "path";
 import { SKILLS_ROOT, SKILLS_STORE, CONFIG_PATH } from "./paths.ts";
 import type { Config, Source, Target } from "../types.ts";
 
@@ -17,6 +18,7 @@ export async function ensureDirectories(): Promise<void> {
 
 /**
  * Read the config file, creating it if it doesn't exist
+ * Also handles migration from old config format (namespace -> name)
  */
 export async function readConfig(): Promise<Config> {
   await ensureDirectories();
@@ -30,11 +32,70 @@ export async function readConfig(): Promise<Config> {
 
   try {
     const content = await configFile.json();
+    
+    // Migrate old config format (namespace -> name)
+    let needsMigration = false;
+    if (content.sources) {
+      for (const source of content.sources) {
+        if (source.namespace && !source.name) {
+          // Extract skill name from old namespace (e.g., "owner/skill" -> "skill")
+          const oldNamespace = source.namespace;
+          const parts = oldNamespace.split("/");
+          const newName = parts[parts.length - 1];
+          source.name = newName;
+          delete source.namespace;
+          needsMigration = true;
+          
+          // Also migrate the folder structure
+          await migrateSkillFolder(oldNamespace, newName);
+        }
+      }
+    }
+    
+    if (needsMigration) {
+      await writeConfig(content as Config);
+    }
+    
     return content as Config;
   } catch {
     // If config is corrupted, reset it
     await writeConfig(DEFAULT_CONFIG);
     return DEFAULT_CONFIG;
+  }
+}
+
+/**
+ * Migrate a skill folder from old nested structure to new flat structure
+ */
+async function migrateSkillFolder(oldNamespace: string, newName: string): Promise<void> {
+  const oldPath = join(SKILLS_STORE, oldNamespace);
+  const newPath = join(SKILLS_STORE, newName);
+  
+  try {
+    // Check if old path exists
+    const oldExists = await Bun.file(join(oldPath, "SKILL.md")).exists() || 
+                      await Bun.file(oldPath).exists();
+    
+    if (oldExists) {
+      // Check if new path already exists
+      const newExists = await Bun.file(newPath).exists();
+      
+      if (!newExists) {
+        // Move the folder
+        await rename(oldPath, newPath);
+        console.log(`Migrated skill folder: ${oldNamespace} -> ${newName}`);
+        
+        // Try to clean up empty parent directories
+        const parentDir = join(SKILLS_STORE, oldNamespace.split("/")[0]);
+        try {
+          await rm(parentDir, { recursive: false });
+        } catch {
+          // Parent dir not empty or doesn't exist, ignore
+        }
+      }
+    }
+  } catch {
+    // Migration failed, folder might not exist
   }
 }
 
@@ -52,10 +113,10 @@ export async function writeConfig(config: Config): Promise<void> {
 export async function addSource(source: Source): Promise<void> {
   const config = await readConfig();
   
-  // Check if namespace already exists
-  const existing = config.sources.find(s => s.namespace === source.namespace);
+  // Check if name already exists
+  const existing = config.sources.find(s => s.name === source.name);
   if (existing) {
-    throw new Error(`Source with namespace "${source.namespace}" already exists`);
+    throw new Error(`Skill with name "${source.name}" already exists`);
   }
 
   config.sources.push(source);
@@ -65,10 +126,10 @@ export async function addSource(source: Source): Promise<void> {
 /**
  * Remove a source from the config
  */
-export async function removeSource(namespace: string): Promise<Source | null> {
+export async function removeSource(name: string): Promise<Source | null> {
   const config = await readConfig();
   
-  const index = config.sources.findIndex(s => s.namespace === namespace);
+  const index = config.sources.findIndex(s => s.name === name);
   if (index === -1) {
     return null;
   }

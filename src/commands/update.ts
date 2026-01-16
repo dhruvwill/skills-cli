@@ -1,7 +1,7 @@
 import { $ } from "bun";
 import { rm, cp } from "fs/promises";
 import { getSources } from "../lib/config.ts";
-import { getNamespacePath, parseGitUrl } from "../lib/paths.ts";
+import { getSkillPath, parseGitUrl } from "../lib/paths.ts";
 import { directoryExists } from "../lib/hash.ts";
 
 /**
@@ -21,12 +21,12 @@ export async function update(): Promise<void> {
   for (const source of sources) {
     try {
       if (source.type === "remote") {
-        await updateRemoteSource(source.namespace, source.url!);
+        await updateRemoteSource(source.name, source.url!);
       } else {
-        await updateLocalSource(source.namespace, source.path!);
+        await updateLocalSource(source.name, source.path!);
       }
     } catch (error) {
-      console.error(`  ${source.namespace}: Failed - ${error instanceof Error ? error.message : error}`);
+      console.error(`  ${source.name}: Failed - ${error instanceof Error ? error.message : error}`);
     }
   }
 
@@ -37,8 +37,8 @@ export async function update(): Promise<void> {
 /**
  * Update a remote source by re-cloning
  */
-async function updateRemoteSource(namespace: string, url: string): Promise<void> {
-  const targetPath = getNamespacePath(namespace);
+async function updateRemoteSource(name: string, url: string): Promise<void> {
+  const targetPath = getSkillPath(name);
   const parsed = parseGitUrl(url);
   
   if (!parsed) {
@@ -48,7 +48,7 @@ async function updateRemoteSource(namespace: string, url: string): Promise<void>
   const cloneUrl = parsed.cloneUrl;
   const branch = parsed.branch || "main";
   
-  console.log(`  ${namespace}: Updating from ${url}...`);
+  console.log(`  ${name}: Updating from ${url}...`);
 
   // Remove existing directory
   await rm(targetPath, { recursive: true, force: true });
@@ -77,7 +77,7 @@ async function updateRemoteSource(namespace: string, url: string): Promise<void>
       await rm(`${targetPath}/.git`, { recursive: true, force: true });
     }
     
-    console.log(`  ${namespace}: Updated`);
+    console.log(`  ${name}: Updated`);
   } catch (error) {
     // Clean up on failure
     await rm(`${targetPath}_temp`, { recursive: true, force: true });
@@ -88,10 +88,10 @@ async function updateRemoteSource(namespace: string, url: string): Promise<void>
 /**
  * Update a local source by re-copying
  */
-async function updateLocalSource(namespace: string, sourcePath: string): Promise<void> {
-  const targetPath = getNamespacePath(namespace);
+async function updateLocalSource(name: string, sourcePath: string): Promise<void> {
+  const targetPath = getSkillPath(name);
   
-  console.log(`  ${namespace}: Updating from ${sourcePath}...`);
+  console.log(`  ${name}: Updating from ${sourcePath}...`);
 
   // Check if source still exists
   if (!(await directoryExists(sourcePath))) {
@@ -104,5 +104,5 @@ async function updateLocalSource(namespace: string, sourcePath: string): Promise
   // Re-copy
   await cp(sourcePath, targetPath, { recursive: true });
   
-  console.log(`  ${namespace}: Updated`);
+  console.log(`  ${name}: Updated`);
 }

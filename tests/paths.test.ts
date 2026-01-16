@@ -1,5 +1,5 @@
 import { describe, test, expect } from "bun:test";
-import { parseGitUrl, getRemoteNamespace, getLocalNamespace } from "../src/lib/paths.ts";
+import { parseGitUrl, getDefaultSkillName, getLocalSkillName } from "../src/lib/paths.ts";
 
 describe("parseGitUrl", () => {
   describe("GitHub URLs", () => {
@@ -147,27 +147,27 @@ describe("parseGitUrl", () => {
   });
 });
 
-describe("getRemoteNamespace", () => {
-  test("returns owner/repo for basic URL", () => {
+describe("getDefaultSkillName", () => {
+  test("returns repo name for basic URL", () => {
     const parsed = parseGitUrl("https://github.com/owner/repo")!;
-    expect(getRemoteNamespace(parsed)).toBe("owner/repo");
+    expect(getDefaultSkillName(parsed)).toBe("repo");
   });
 
-  test("returns owner/skill-name for subdirectory URL", () => {
+  test("returns skill folder name for subdirectory URL", () => {
     const parsed = parseGitUrl("https://github.com/owner/repo/tree/main/skills/my-skill")!;
-    expect(getRemoteNamespace(parsed)).toBe("owner/my-skill");
+    expect(getDefaultSkillName(parsed)).toBe("my-skill");
   });
 
   test("handles nested subdirectories", () => {
     const parsed = parseGitUrl("https://github.com/owner/repo/tree/main/path/to/deep/skill")!;
-    expect(getRemoteNamespace(parsed)).toBe("owner/skill");
+    expect(getDefaultSkillName(parsed)).toBe("skill");
   });
 });
 
-describe("getLocalNamespace", () => {
+describe("getLocalSkillName", () => {
   test("extracts folder name from path", () => {
-    expect(getLocalNamespace("/home/user/my-skills")).toBe("local/my-skills");
-    expect(getLocalNamespace("C:\\Users\\Admin\\skills")).toBe("local/skills");
-    expect(getLocalNamespace("./relative-path")).toBe("local/relative-path");
+    expect(getLocalSkillName("/home/user/my-skills")).toBe("my-skills");
+    expect(getLocalSkillName("C:\\Users\\Admin\\skills")).toBe("skills");
+    expect(getLocalSkillName("./relative-path")).toBe("relative-path");
   });
 });

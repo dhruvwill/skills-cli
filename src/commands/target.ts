@@ -6,14 +6,32 @@ import { addTarget, removeTarget, getTargets } from "../lib/config.ts";
 import { SKILLS_STORE } from "../lib/paths.ts";
 import { compareDirectories, directoryExists } from "../lib/hash.ts";
 import { syncToTarget } from "./sync.ts";
+import { getKnownTarget, KNOWN_TARGETS } from "../lib/known-targets.ts";
 
 /**
  * Add a target directory
+ * If path is not provided, looks up known targets
  */
-export async function targetAdd(name: string, path: string): Promise<void> {
-  const absolutePath = resolve(path.replace(/^~/, process.env.HOME || process.env.USERPROFILE || ""));
+export async function targetAdd(name: string, path?: string): Promise<void> {
+  let absolutePath: string;
+  
+  if (path) {
+    // User provided a custom path
+    absolutePath = resolve(path.replace(/^~/, process.env.HOME || process.env.USERPROFILE || ""));
+  } else {
+    // Look up known target
+    const known = getKnownTarget(name);
+    if (!known) {
+      console.error(chalk.red(`Unknown target: ${name}`));
+      console.log(`\nRun ${chalk.cyan("skills target available")} to see predefined targets.`);
+      console.log(`Or specify a custom path: ${chalk.cyan(`skills target add ${name} <path>`)}`);
+      process.exit(1);
+    }
+    absolutePath = known.path;
+    console.log(`Using predefined path for ${chalk.cyan(known.description)}`);
+  }
 
-  console.log(`Adding target: ${name}`);
+  console.log(`Adding target: ${chalk.cyan(name)}`);
   console.log(`Path: ${absolutePath}`);
 
   // Create the target directory if it doesn't exist
@@ -25,13 +43,74 @@ export async function targetAdd(name: string, path: string): Promise<void> {
     path: absolutePath,
   });
 
-  console.log(`Successfully registered target: ${name}`);
+  console.log(chalk.green(`Successfully registered target: ${name}`));
 
   // Perform initial sync
   console.log("Performing initial sync...");
   await syncToTarget({ name, path: absolutePath });
   
-  console.log(`Target "${name}" is now synced.`);
+  console.log(chalk.green(`Target "${name}" is now synced.`));
+}
+
+/**
+ * Show available predefined targets
+ */
+export async function targetAvailable(): Promise<void> {
+  const existingTargets = await getTargets();
+  const existingNames = new Set(existingTargets.map(t => t.name.toLowerCase()));
+
+  console.log();
+  console.log(chalk.bold("Available Predefined Targets"));
+  console.log(chalk.dim("─".repeat(60)));
+  console.log();
+
+  const table = new Table({
+    head: [
+      chalk.bold("Name"),
+      chalk.bold("Description"),
+      chalk.bold("Path"),
+      chalk.bold("Tool Status"),
+      chalk.bold("Added"),
+    ],
+    style: {
+      head: [],
+      border: [],
+    },
+  });
+
+  for (const target of KNOWN_TARGETS) {
+    const isAdded = existingNames.has(target.name.toLowerCase());
+    const addedStatus = isAdded ? chalk.green("✓") : chalk.dim("-");
+    
+    // Color code the tool status
+    let toolStatus: string;
+    if (target.status === "GA") {
+      toolStatus = chalk.green(target.status);
+    } else if (target.status === "Beta") {
+      toolStatus = chalk.yellow(target.status);
+    } else {
+      toolStatus = chalk.dim(target.status);
+    }
+    
+    table.push([
+      target.name,
+      target.description,
+      target.path,
+      toolStatus,
+      addedStatus,
+    ]);
+  }
+
+  console.log(table.toString());
+  console.log();
+  console.log(chalk.bold("Usage:"));
+  console.log(`  ${chalk.cyan("skills target add <name>")}              Add a predefined target`);
+  console.log(`  ${chalk.cyan("skills target add <name> <path>")}       Add a custom target`);
+  console.log();
+  console.log(chalk.bold("Examples:"));
+  console.log(`  ${chalk.cyan("skills target add cursor")}              Uses predefined path`);
+  console.log(`  ${chalk.cyan("skills target add vscode ~/.vscode/skills")}  Custom path`);
+  console.log();
 }
 
 /**

@@ -15,15 +15,23 @@ describe("CLI Integration Tests", () => {
   let testDir: string;
   let testSourceDir: string;
   let testTargetDir: string;
+  let uniqueId: string;
+  let testSkillName: string;
+  let testTargetName: string;
 
   beforeAll(async () => {
+    // Generate unique IDs for this test run to avoid conflicts
+    uniqueId = Date.now().toString(36);
+    testSkillName = `test-skill-${uniqueId}`;
+    testTargetName = `test-target-${uniqueId}`;
+    
     // Create a master test directory
-    testDir = join(tmpdir(), `skills-integration-${Date.now()}`);
+    testDir = join(tmpdir(), `skills-integration-${uniqueId}`);
     await mkdir(testDir, { recursive: true });
 
-    // Create test subdirectories
-    testSourceDir = join(testDir, "test-source");
-    testTargetDir = join(testDir, "test-target");
+    // Create test subdirectories with unique names
+    testSourceDir = join(testDir, testSkillName);
+    testTargetDir = join(testDir, testTargetName);
 
     await mkdir(testSourceDir, { recursive: true });
     await mkdir(testTargetDir, { recursive: true });
@@ -36,6 +44,14 @@ describe("CLI Integration Tests", () => {
   afterAll(async () => {
     // Clean up test directory
     await rm(testDir, { recursive: true, force: true });
+    
+    // Also clean up any leftover skills/targets from failed tests
+    try {
+      await $`bun run src/cli.ts source remove ${testSkillName}`.quiet();
+    } catch {}
+    try {
+      await $`bun run src/cli.ts target remove ${testTargetName}`.quiet();
+    } catch {}
   });
 
   describe("Local Source Management", () => {
@@ -43,28 +59,28 @@ describe("CLI Integration Tests", () => {
       const result = await $`bun run src/cli.ts source add ${testSourceDir} --local`.text();
       
       expect(result).toContain("Adding local source");
-      expect(result).toContain("Successfully added local source");
+      expect(result).toContain("Successfully added skill");
     });
 
     test("lists the added source", async () => {
       const result = await $`bun run src/cli.ts source list`.text();
       
-      expect(result).toContain("local/test-source");
+      expect(result).toContain(testSkillName);
       expect(result).toContain("local");
       expect(result).toContain("OK");
     });
 
     test("can remove the source", async () => {
-      const result = await $`bun run src/cli.ts source remove local/test-source`.text();
+      const result = await $`bun run src/cli.ts source remove ${testSkillName}`.text();
       
-      expect(result).toContain("Removed source");
+      expect(result).toContain("Removed skill");
     });
 
     test("source is no longer listed", async () => {
       const result = await $`bun run src/cli.ts source list`.text();
       
       // The specific test source should be removed (may have other sources)
-      expect(result).not.toContain("local/test-source");
+      expect(result).not.toContain(testSkillName);
     });
   });
 
@@ -77,34 +93,34 @@ describe("CLI Integration Tests", () => {
     afterEach(async () => {
       // Clean up
       try {
-        await $`bun run src/cli.ts target remove test-target`.quiet();
+        await $`bun run src/cli.ts target remove ${testTargetName}`.quiet();
       } catch {}
       try {
-        await $`bun run src/cli.ts source remove local/test-source`.quiet();
+        await $`bun run src/cli.ts source remove ${testSkillName}`.quiet();
       } catch {}
     });
 
     test("can add a target", async () => {
-      const result = await $`bun run src/cli.ts target add test-target ${testTargetDir}`.text();
+      const result = await $`bun run src/cli.ts target add ${testTargetName} ${testTargetDir}`.text();
       
-      expect(result).toContain("Adding target: test-target");
+      expect(result).toContain(`Adding target:`);
       expect(result).toContain("Successfully registered target");
       expect(result).toContain("Performing initial sync");
     });
 
     test("lists the added target with sync status", async () => {
-      await $`bun run src/cli.ts target add test-target ${testTargetDir}`.quiet();
+      await $`bun run src/cli.ts target add ${testTargetName} ${testTargetDir}`.quiet();
       
       const result = await $`bun run src/cli.ts target list`.text();
       
-      expect(result).toContain("test-target");
+      expect(result).toContain(testTargetName);
       expect(result).toContain("synced");
     });
 
     test("can remove the target", async () => {
-      await $`bun run src/cli.ts target add test-target ${testTargetDir}`.quiet();
+      await $`bun run src/cli.ts target add ${testTargetName} ${testTargetDir}`.quiet();
       
-      const result = await $`bun run src/cli.ts target remove test-target`.text();
+      const result = await $`bun run src/cli.ts target remove ${testTargetName}`.text();
       
       expect(result).toContain("Removed target");
     });
@@ -114,15 +130,15 @@ describe("CLI Integration Tests", () => {
     beforeEach(async () => {
       // Add source and target
       await $`bun run src/cli.ts source add ${testSourceDir} --local`.quiet();
-      await $`bun run src/cli.ts target add test-target ${testTargetDir}`.quiet();
+      await $`bun run src/cli.ts target add ${testTargetName} ${testTargetDir}`.quiet();
     });
 
     afterEach(async () => {
       try {
-        await $`bun run src/cli.ts target remove test-target`.quiet();
+        await $`bun run src/cli.ts target remove ${testTargetName}`.quiet();
       } catch {}
       try {
-        await $`bun run src/cli.ts source remove local/test-source`.quiet();
+        await $`bun run src/cli.ts source remove ${testSkillName}`.quiet();
       } catch {}
     });
 
@@ -153,7 +169,7 @@ describe("CLI Integration Tests", () => {
       
       expect(result).toContain("Skills Status");
       expect(result).toContain("Paths");
-      expect(result).toContain("Sources");
+      expect(result).toContain("Skills");
       expect(result).toContain("Targets");
     });
 
@@ -222,12 +238,12 @@ describe("CLI Integration Tests", () => {
       }
     });
 
-    test("target add without path shows error", async () => {
+    test("target add with unknown name shows helpful error", async () => {
       try {
-        await $`bun run src/cli.ts target add myname`.text();
+        await $`bun run src/cli.ts target add unknown-tool-xyz`.text();
         expect(true).toBe(false); // Should not reach
       } catch (error: any) {
-        expect(error.stderr.toString()).toContain("Usage:");
+        expect(error.stderr.toString()).toContain("Unknown target");
       }
     });
 

@@ -11,10 +11,10 @@ export const SKILLS_STORE = join(SKILLS_ROOT, "store");
 export const CONFIG_PATH = join(SKILLS_ROOT, "config.json");
 
 /**
- * Get the store path for a given namespace
+ * Get the store path for a given skill name
  */
-export function getNamespacePath(namespace: string): string {
-  return join(SKILLS_STORE, namespace);
+export function getSkillPath(name: string): string {
+  return join(SKILLS_STORE, name);
 }
 
 export interface ParsedGitUrl {
@@ -214,23 +214,20 @@ function parseGenericGitUrl(url: string): ParsedGitUrl | null {
 }
 
 /**
- * Get the namespace for a parsed Git URL
- * For subdirectories, uses owner/skill-name
- * For full repos, uses owner/repo
+ * Get the default skill name from a parsed Git URL
+ * Uses the last folder name (skill folder name)
  */
-export function getRemoteNamespace(parsed: ParsedGitUrl): string {
+export function getDefaultSkillName(parsed: ParsedGitUrl): string {
   if (parsed.subdir) {
     // Use the last part of the subdir path as the skill name
-    const subdirName = parsed.subdir.split("/").pop() || parsed.subdir;
-    return `${parsed.owner}/${subdirName}`;
+    return parsed.subdir.split("/").pop() || parsed.subdir;
   }
-  return `${parsed.owner}/${parsed.repo}`;
+  return parsed.repo;
 }
 
 /**
- * Get the local namespace for a folder path
+ * Get the default skill name from a local folder path
  */
-export function getLocalNamespace(folderPath: string): string {
-  const folderName = folderPath.split(/[\/\\]/).filter(Boolean).pop() || "unnamed";
-  return `local/${folderName}`;
+export function getLocalSkillName(folderPath: string): string {
+  return folderPath.split(/[\/\\]/).filter(Boolean).pop() || "unnamed";
 }

@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import Table from "cli-table3";
 import { getSources, getTargets } from "../lib/config.ts";
-import { SKILLS_ROOT, SKILLS_STORE, getNamespacePath } from "../lib/paths.ts";
+import { SKILLS_ROOT, SKILLS_STORE, getSkillPath } from "../lib/paths.ts";
 import { directoryExists, compareDirectories } from "../lib/hash.ts";
 
 /**
@@ -21,16 +21,16 @@ export async function status(): Promise<void> {
   // Sources summary
   const sources = await getSources();
   console.log();
-  console.log(chalk.bold(`Sources (${sources.length})`));
+  console.log(chalk.bold(`Skills (${sources.length})`));
   
   if (sources.length === 0) {
-    console.log(chalk.dim("  No sources registered"));
+    console.log(chalk.dim("  No skills registered"));
   } else {
     for (const source of sources) {
-      const exists = await directoryExists(getNamespacePath(source.namespace));
+      const exists = await directoryExists(getSkillPath(source.name));
       const icon = exists ? chalk.green("●") : chalk.red("●");
       const typeLabel = source.type === "remote" ? chalk.blue("remote") : chalk.magenta("local");
-      console.log(`  ${icon} ${source.namespace} ${chalk.dim(`(${typeLabel})`)}`);
+      console.log(`  ${icon} ${source.name} ${chalk.dim(`(${typeLabel})`)}`);
     }
   }
 

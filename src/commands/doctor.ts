@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { $ } from "bun";
 import { getSources, getTargets } from "../lib/config.ts";
-import { getNamespacePath, SKILLS_ROOT, SKILLS_STORE, CONFIG_PATH } from "../lib/paths.ts";
+import { getSkillPath, SKILLS_ROOT, SKILLS_STORE, CONFIG_PATH } from "../lib/paths.ts";
 import { directoryExists } from "../lib/hash.ts";
 
 interface DiagnosticResult {
@@ -176,18 +176,18 @@ async function checkSources(): Promise<DiagnosticResult[]> {
     }
 
     for (const source of sources) {
-      const path = getNamespacePath(source.namespace);
+      const path = getSkillPath(source.name);
       const exists = await directoryExists(path);
       
       if (exists) {
         results.push({
-          name: `Source: ${source.namespace}`,
+          name: `Skill: ${source.name}`,
           status: "ok",
           message: `${source.type} → ${path}`,
         });
       } else {
         results.push({
-          name: `Source: ${source.namespace}`,
+          name: `Skill: ${source.name}`,
           status: "error",
           message: `Missing directory: ${path}. Run: skills update`,
         });

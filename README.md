@@ -73,6 +73,14 @@ skills --version
 skills doctor
 ```
 
+### Updating
+
+Update to the latest version with:
+
+```bash
+skills self-update
+```
+
 ---
 
 ## Quick Start
@@ -137,6 +145,7 @@ skills doctor   # Diagnose issues
 | `skills doctor` | Diagnose configuration issues |
 | `skills sync` | Push skills from store to all targets |
 | `skills update` | Refresh all skills from origin |
+| `skills self-update` | Update the CLI to the latest version |
 
 ### Skill Management
 

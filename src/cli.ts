@@ -7,8 +7,9 @@ import { sync } from "./commands/sync.ts";
 import { update } from "./commands/update.ts";
 import { doctor } from "./commands/doctor.ts";
 import { status } from "./commands/status.ts";
+import { selfUpdate } from "./commands/self-update.ts";
 
-const VERSION = "1.1.0";
+const VERSION = "1.1.1";
 
 function printHelp() {
   console.log(`
@@ -20,6 +21,7 @@ ${chalk.bold("USAGE")}
 ${chalk.bold("COMMANDS")}
   ${chalk.cyan("status")}                        Show overview of skills, targets & sync state
   ${chalk.cyan("doctor")}                        Diagnose configuration issues
+  ${chalk.cyan("self-update")}                   Update the CLI to the latest version
 
   ${chalk.bold("Skill Management")}
   ${chalk.cyan("source list")}                   List all registered skills
@@ -120,6 +122,10 @@ async function main() {
 
       case "status":
         await status();
+        break;
+
+      case "self-update":
+        await selfUpdate();
         break;
 
       case "help":

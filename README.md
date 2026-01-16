@@ -164,18 +164,15 @@ skills doctor   # Diagnose issues
 
 Run `skills target available` to see all supported tools:
 
-| Tool | Path | Status |
-|------|------|--------|
-| **Cursor** | `~/.cursor/skills/` | GA |
-| **Claude Code** | `~/.claude/skills/` | GA |
-| **GitHub Copilot** | `~/.copilot/skills/` | GA |
-| **OpenCode** | `~/.config/opencode/skills/` | GA |
-| **Windsurf** | `~/.windsurf/skills/` | GA |
-| **Gemini CLI** | `~/.gemini/skills/` | Beta |
-| **Aider** | `~/.aider/skills/` | Beta |
-| **Goose** | `~/.config/goose/skills/` | Beta |
-| **Amp** | `~/.amp/skills/` | Beta |
-| **Antigravity** | `~/.gemini/antigravity/` | Experimental |
+| Tool | Path |
+|------|------|
+| **Cursor** | `~/.cursor/skills/` |
+| **Claude Code** | `~/.claude/skills/` |
+| **Gemini CLI** | `~/.gemini/skills/` |
+| **VS Code / Copilot** | `~/.copilot/skills/` |
+| **OpenCode** | `~/.config/opencode/skills/` |
+| **Windsurf** | `~/.windsurf/skills/` |
+| **Antigravity** | `~/.gemini/antigravity/skills/` |
 
 ### Adding Predefined Targets
 

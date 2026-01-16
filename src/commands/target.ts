@@ -69,7 +69,6 @@ export async function targetAvailable(): Promise<void> {
       chalk.bold("Name"),
       chalk.bold("Description"),
       chalk.bold("Path"),
-      chalk.bold("Tool Status"),
       chalk.bold("Added"),
     ],
     style: {
@@ -82,21 +81,10 @@ export async function targetAvailable(): Promise<void> {
     const isAdded = existingNames.has(target.name.toLowerCase());
     const addedStatus = isAdded ? chalk.green("✓") : chalk.dim("-");
     
-    // Color code the tool status
-    let toolStatus: string;
-    if (target.status === "GA") {
-      toolStatus = chalk.green(target.status);
-    } else if (target.status === "Beta") {
-      toolStatus = chalk.yellow(target.status);
-    } else {
-      toolStatus = chalk.dim(target.status);
-    }
-    
     table.push([
       target.name,
       target.description,
       target.path,
-      toolStatus,
       addedStatus,
     ]);
   }
@@ -109,7 +97,7 @@ export async function targetAvailable(): Promise<void> {
   console.log();
   console.log(chalk.bold("Examples:"));
   console.log(`  ${chalk.cyan("skills target add cursor")}              Uses predefined path`);
-  console.log(`  ${chalk.cyan("skills target add vscode ~/.vscode/skills")}  Custom path`);
+  console.log(`  ${chalk.cyan("skills target add myapp ~/.myapp/skills")}  Custom path`);
   console.log();
 }
 
